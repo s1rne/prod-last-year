@@ -27,4 +27,4 @@ async def remove_friend(data: AddFriendRequest, current_user=Depends(jwt_tools.g
 @router.get("")
 async def get_friends(current_user=Depends(jwt_tools.get_current_user)):
     friends = await tools.get_friends(current_user["id"])
-    return JSONResponse(status_code=200, content={"status": "ok", "friends": friends})
+    return JSONResponse(status_code=200, content=friends)

@@ -14,17 +14,17 @@ security = HTTPBearer()
 
 class JWT:
     @staticmethod
-    def encode(login: str, sub: str, rel: str) -> str:
+    def encode(login: str, id: str, rel: str) -> str:
         current_time = datetime.now(UTC)
         expiration = current_time + timedelta(hours=JWT_EXPIRATION)
 
         token_payload = {
             "login": login,
+            "id": id,
             "exp": expiration.timestamp(),
             "iat": current_time.timestamp(),
             "sub": {
                 "rel": rel,
-                "sub": sub,
             },
         }
 
@@ -68,10 +68,10 @@ class JWT:
             if datetime.fromtimestamp(payload['exp']) < datetime.now():
                 raise credentials_exception
 
-            user = await tools.get_user_by_login(payload['login'])
+            user = await tools.get_user_by_id(payload['id'])
             if not user:
                 raise credentials_exception
-            
+
             rel = payload.get("sub").get("rel")
             if not rel:
                 raise credentials_exception

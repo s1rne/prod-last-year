@@ -49,13 +49,19 @@ async def sign_in(login: str, password: str):
         user = await session.scalar(select(User).where(User.login == login))
         passwordHash = hash_password(password)
         if user and user.passwordHash == passwordHash:
-            return user.to_dict()
-        return None
+            return user.to_dict(), user.id
+        return None, None
 
 
 async def get_user_by_login(login: str):
     async with async_session() as session:
         user = await session.scalar(select(User).where(User.login == login))
+        return user.to_dict()
+
+
+async def get_user_by_id(id: str):
+    async with async_session() as session:
+        user = await session.scalar(select(User).where(User.id == id))
         return user.to_dict()
 
 
@@ -74,39 +80,47 @@ async def get_user(login: str):
         user = await session.scalar(select(User).where(User.login == login))
         return user.to_dict()
 
+
 async def add_friend(inviter_id: int, invitee_login: str):
     async with async_session() as session:
         invitee = await session.scalar(select(User).where(User.login == invitee_login))
         if not invitee:
             return 1
-        
+
         invitee_id = invitee.id
         if inviter_id == invitee_id:
             return 2
-        
+
         friend_group = await session.scalar(select(Friend).where(Friend.inviter_id == inviter_id and Friend.invitee_id == invitee_id or Friend.inviter_id == invitee_id and Friend.invitee_id == inviter_id))
         if friend_group:
             return 3
-        
+
         new_friend = Friend(inviter_id=inviter_id, invitee_id=invitee_id)
         session.add(new_friend)
         await session.commit()
         return 0
-    
+
+
 async def remove_friend(inviter_id: int, invitee_login: str):
     async with async_session() as session:
         invitee = await session.scalar(select(User).where(User.login == invitee_login))
         if not invitee:
             return 1
-        
+
         invitee_id = invitee.id
         if inviter_id == invitee_id:
             return 2
-        
+
         friend_group = await session.scalar(select(Friend).where(Friend.inviter_id == inviter_id and Friend.invitee_id == invitee_id or Friend.inviter_id == invitee_id and Friend.invitee_id == inviter_id))
         if not friend_group:
             return 3
-        
+
         await session.delete(friend_group)
         await session.commit()
         return 0
+
+
+async def get_friends(user_id: int):
+    async with async_session() as session:
+        friends = await session.scalars(select(Friend).where(Friend.inviter_id == user_id))
+        return [await friend.friend_dict() for friend in friends]

@@ -1,15 +1,16 @@
 from typing import Any, Dict
 
-from sqlalchemy import BigInteger, String
+from sqlalchemy import String
 from sqlalchemy.orm import mapped_column
 
 from db.session import Base
+from utils.utils import generate_uuid
 
 
 class Country(Base):
     __tablename__ = "countries"
 
-    id = mapped_column(BigInteger, nullable=False, primary_key=True)
+    id = mapped_column(String, default=generate_uuid, primary_key=True)
     name = mapped_column(String)
     alpha2 = mapped_column(String)
     alpha3 = mapped_column(String)

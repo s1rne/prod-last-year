@@ -26,11 +26,11 @@ async def register(request: RegisterRequest):
 @router.post("/sign-in")
 async def sign_in(request: SignInRequest):
     try:
-        user = await tools.sign_in(request.login, request.password)
+        user, id = await tools.sign_in(request.login, request.password)
         if user:
             token = jwt_tools.encode(
                 user["login"],
-                str(user.get("id", "")),
+                id,
                 hash_password(user["passwordHash"])
             )
 

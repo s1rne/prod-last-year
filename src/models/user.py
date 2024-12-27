@@ -4,12 +4,13 @@ from sqlalchemy import BigInteger, String, Boolean
 from sqlalchemy.orm import mapped_column
 
 from db.session import Base
+from utils.utils import generate_uuid
 
 
 class User(Base):
     __tablename__ = "users"
     
-    id = mapped_column(BigInteger, primary_key=True)
+    id = mapped_column(String, default=generate_uuid, primary_key=True)
     login = mapped_column(String)
     email = mapped_column(String)
     passwordHash = mapped_column(String)

@@ -1,4 +1,5 @@
 import hashlib
+import uuid
 
 from config import RANDOM_SECRET
 from db import tools
@@ -78,3 +79,7 @@ def collect_user_data(user: dict):
     if user["phone"] is not None:
         content["phone"] = user["phone"]
     return content
+
+
+def generate_uuid():
+    return str(uuid.uuid4())
