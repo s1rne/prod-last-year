@@ -1,6 +1,6 @@
 from typing import Any, Dict
 
-from config import DATABASE_URL
+from config import db_url
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import (AsyncAttrs, async_sessionmaker,
                                     create_async_engine)
@@ -8,7 +8,7 @@ from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.pool import NullPool
 
 engine = create_async_engine(
-    url=DATABASE_URL, echo=False, poolclass=NullPool)
+    url=db_url, echo=False, poolclass=NullPool)
 
 async_session = async_sessionmaker(engine, expire_on_commit=False)
 

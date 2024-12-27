@@ -19,7 +19,6 @@ async def register(request: RegisterRequest):
             return JSONResponse(status_code=409, content={})
         return JSONResponse(status_code=201, content=user)
     except Exception as e:
-        print(e)
         return JSONResponse(status_code=400, content={})
 
 

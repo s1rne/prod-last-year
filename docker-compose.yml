@@ -19,22 +19,25 @@ services:
         max-size: 250m
     volumes:
       - .:/app
-    working_dir: /app
     build:
       context: .
       dockerfile: Dockerfile
     environment:
       - PYTHONUNBUFFERED=1
       - TZ=Europe/Moscow
-      - RANDOM_SECRET=secret
-      - PORT=8000
-      - HOST=0.0.0.0
-      - POSTGRES_DB=test
-      - POSTGRES_USER=postgres
+      - SERVER_ADDRESS=0.0.0.0:8000
+      - SERVER_PORT=8000
+      - POSTGRES_CONN=postgresql+asyncpg://postgres:postgres@localhost:5432/test
+      - POSTGRES_JDBC_URL=jdbc:postgresql://localhost:5432/test
+      - POSTGRES_USERNAME=postgres
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_HOST=db
       - POSTGRES_PORT=5432
-    command: python app.py
+      - POSTGRES_DATABASE=test
+      - RANDOM_SECRET=secret
+    ports:
+      - "8000:8000"
+    command: python src/app.py
     restart: unless-stopped
 
 volumes:

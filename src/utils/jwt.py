@@ -14,7 +14,7 @@ security = HTTPBearer()
 
 class JWT:
     @staticmethod
-    def encode(login: str, id: str, rel: str) -> str:
+    def encode(login: str, id: str, sub: str) -> str:
         current_time = datetime.now(UTC)
         expiration = current_time + timedelta(hours=JWT_EXPIRATION)
 
@@ -23,9 +23,7 @@ class JWT:
             "id": id,
             "exp": expiration.timestamp(),
             "iat": current_time.timestamp(),
-            "sub": {
-                "rel": rel,
-            },
+            "sub": sub,
         }
 
         token = jwt.encode(
@@ -54,7 +52,7 @@ class JWT:
                     "verify_signature": True,
                     "verify_exp": True,
                     "verify_iat": True,
-                    "require": ["exp", "iat", "login"]
+                    "require": ["exp", "iat", "login", "id", "sub"]
                 }
             )
             exp_timestamp = payload.get("exp")
@@ -72,7 +70,7 @@ class JWT:
             if not user:
                 raise credentials_exception
 
-            rel = payload.get("sub").get("rel")
+            rel = payload.get("sub")
             if not rel:
                 raise credentials_exception
 
