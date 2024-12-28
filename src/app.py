@@ -25,6 +25,8 @@ app.add_middleware(
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    # TODO: add errorResponse
+    # TODO: add 401 token error
     return JSONResponse(
         status_code=400,
         content={},

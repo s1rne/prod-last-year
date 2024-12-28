@@ -20,7 +20,10 @@ async def profile(current_user=Depends(jwt_tools.get_current_user)):
 @router.patch("/profile")
 async def profile(data: UpdateProfileRequest, current_user=Depends(jwt_tools.get_current_user)):
     if not await validation_user_data.validate_update_profile_request(data):
+        # TODO: add errorResponse
         return JSONResponse(status_code=400, content={})
+    
+    # TODO: add 409 error
 
     user = await tools.update_user(current_user["login"], data.model_dump())
     content = collect_user_data(user)
@@ -31,9 +34,11 @@ async def profile(data: UpdateProfileRequest, current_user=Depends(jwt_tools.get
 @router.post("/updatePassword")
 async def update_password(data: UpdatePasswordRequest, current_user=Depends(jwt_tools.get_current_user)):
     if hash_password(data.oldPassword) != current_user["passwordHash"]:
+        # TODO: add errorResponse
         return JSONResponse(status_code=403, content={})
 
     if not validation_user_data.validate_password(data.newPassword):
+        # TODO: add errorResponse
         return JSONResponse(status_code=400, content={})
 
     await tools.delete_sessions(current_user["id"])

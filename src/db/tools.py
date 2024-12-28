@@ -2,7 +2,9 @@ import time
 from models.auth import Session
 from models.country import Country
 from models.friend import Friend
+from models.posts import Post
 from models.user import User
+from schemas.posts import NewPostRequest
 from utils.utils import hash_password
 from .session import async_session
 from sqlalchemy import delete, select, update
@@ -161,3 +163,40 @@ async def update_online_time_session(token: str):
     async with async_session() as session:
         await session.execute(update(Session).where(Session.token == token).values(last_online_time=time.time()))
         await session.commit()
+
+
+async def new_post(user_id: int, data: NewPostRequest):
+    async with async_session() as session:
+        new_post = Post(user_id=user_id, content=data.content, tags=data.tags)
+        session.add(new_post)
+        await session.commit()
+        return new_post.to_dict()
+    
+
+async def get_post_by_id(post_id: str, seeker_id: str):
+    async with async_session() as session:
+        post = await session.scalar(select(Post).where(Post.id == post_id))
+        if not post:
+            return 1, {}
+        
+        author = await get_user_by_id(post.user_id)
+        if not author:
+            return 2, {}
+
+        if author["isPublic"] == False:
+            if seeker_id == author["id"]:
+                pass
+            else:
+                is_friend = await session.scalar(select(Friend).where(Friend.inviter_id == author["id"] and Friend.invitee_id == seeker_id))
+                if not is_friend:
+                    return 3, {}
+
+        return 0, post.to_dict()
+
+
+async def get_posts_by_user_id(user_id: int, limit: int = 1_000_000, offset: int = 0):
+    async with async_session() as session:
+        posts = await session.scalars(select(Post).where(Post.user_id == user_id).order_by(Post.createdAt.desc()).offset(offset).limit(limit))
+        if posts is None:
+            return []
+        return [post.to_dict() for post in posts]

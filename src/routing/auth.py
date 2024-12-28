@@ -13,12 +13,15 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 async def register(request: RegisterRequest):
     try:
         if not await validation_user_data.vaidate_register_request(request):
+            # TODO: add errorResponse
             return JSONResponse(status_code=400, content={})
         status, user = await tools.create_user(request.login, request.password, request.email, request.countryCode, request.isPublic, request.image, request.phone)
         if status != 0:
+            # TODO: add errorResponse
             return JSONResponse(status_code=409, content={})
         return JSONResponse(status_code=201, content=user)
     except Exception as e:
+        # TODO: add errorResponse
         return JSONResponse(status_code=400, content={})
 
 
@@ -39,6 +42,7 @@ async def sign_in(request: SignInRequest):
                 content={"token": token},
                 headers={"Authorization": f"Bearer {token}"}
             )
+            # TODO: add errorResponse
         return JSONResponse(status_code=401, content={})
     except Exception:
         return JSONResponse(status_code=400, content={})

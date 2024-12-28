@@ -81,5 +81,18 @@ def collect_user_data(user: dict):
     return content
 
 
+def collect_post_data(post: dict):
+    content = {
+        "id": post["id"],
+        "content": post["content"],
+        "author": post["author"],
+        "tags": post["tags"],
+        "createdAt": post["createdAt"],
+        "likesCount": post["likesCount"],
+        "dislikesCount": post["dislikesCount"]
+    }
+    return content
+
+
 def generate_uuid():
     return str(uuid.uuid4())

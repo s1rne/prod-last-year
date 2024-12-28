@@ -12,6 +12,7 @@ router = APIRouter(prefix="/friends", tags=["friends"])
 async def add_friend(data: AddFriendRequest, current_user=Depends(jwt_tools.get_current_user)):
     status = await tools.add_friend(current_user["id"], data.login)
     if status == 1:
+        # TODO: add errorResponse
         return JSONResponse(status_code=404, content={"status": "error", "message": "User not found"})
     return JSONResponse(status_code=200, content={"status": "ok"})
 
@@ -24,7 +25,7 @@ async def remove_friend(data: AddFriendRequest, current_user=Depends(jwt_tools.g
 
 @router.get("")
 async def get_friends(
-    limit: int = Query(default=10, ge=1, le=1_000_000,
+    limit: int = Query(default=1_000_000, ge=1, le=1_000_000,
                        description="Количество записей на странице"),
     offset: int = Query(
         default=0, ge=0, description="Смещение от начала списка"),

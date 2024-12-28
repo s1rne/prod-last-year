@@ -12,6 +12,7 @@ router = APIRouter(prefix="/profiles", tags=["profiles"])
 async def profile(login: str, current_user=Depends(jwt_tools.get_current_user)):
     user = await tools.get_user(login)
     if not user or user["isPublic"] is False:
+        # TODO: add errorResponse
         return JSONResponse(status_code=403, content={})
 
     content = collect_user_data(user)
