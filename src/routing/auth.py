@@ -32,6 +32,7 @@ async def sign_in(request: SignInRequest):
                 id,
                 hash_password(user["passwordHash"])
             )
+            await tools.create_session(id, token)
 
             return JSONResponse(
                 status_code=200,

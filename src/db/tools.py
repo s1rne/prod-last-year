@@ -1,9 +1,11 @@
+import time
+from models.auth import Session
 from models.country import Country
 from models.friend import Friend
 from models.user import User
 from utils.utils import hash_password
 from .session import async_session
-from sqlalchemy import select
+from sqlalchemy import delete, select, update
 
 
 async def get_countries(region: str | None = None):
@@ -124,3 +126,30 @@ async def get_friends(user_id: int):
     async with async_session() as session:
         friends = await session.scalars(select(Friend).where(Friend.inviter_id == user_id))
         return [await friend.friend_dict() for friend in friends]
+
+
+async def create_session(user_id: str, token: str):
+    async with async_session() as session:
+        new_session = Session(user_id=user_id, token=token,
+                              last_online_time=time.time())
+        session.add(new_session)
+        await session.commit()
+        return new_session.to_dict()
+
+
+async def delete_sessions(user_id: str):
+    async with async_session() as session:
+        await session.execute(delete(Session).where(Session.user_id == user_id))
+        await session.commit()
+
+
+async def get_session(token: str):
+    async with async_session() as session:
+        session = await session.scalar(select(Session).where(Session.token == token))
+        return session.to_dict()
+
+
+async def update_online_time_session(token: str):
+    async with async_session() as session:
+        await session.execute(update(Session).where(Session.token == token).values(last_online_time=time.time()))
+        await session.commit()

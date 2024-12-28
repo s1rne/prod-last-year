@@ -52,9 +52,12 @@ class JWT:
                     "verify_signature": True,
                     "verify_exp": True,
                     "verify_iat": True,
-                    "require": ["exp", "iat", "login", "id", "sub"]
+                    "require": ["exp", "iat", "login", "id"]
                 }
             )
+            if type(payload) != dict:
+                raise credentials_exception
+
             exp_timestamp = payload.get("exp")
             if not exp_timestamp:
                 raise credentials_exception
@@ -70,17 +73,16 @@ class JWT:
             if not user:
                 raise credentials_exception
 
-            rel = payload.get("sub")
-            if not rel:
+            session = await tools.get_session(token)
+            if not session:
                 raise credentials_exception
 
-            if rel != hash_password(user["passwordHash"]):
-                raise credentials_exception
+            await tools.update_online_time_session(token)
 
             return user
-        except jwt.InvalidTokenError as e:
+        except jwt.InvalidTokenError:
             raise credentials_exception
-        except Exception as e:
+        except Exception:
             raise credentials_exception
 
 

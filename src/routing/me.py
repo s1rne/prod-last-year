@@ -36,6 +36,7 @@ async def update_password(data: UpdatePasswordRequest, current_user=Depends(jwt_
     if not validation_user_data.validate_password(data.newPassword):
         return JSONResponse(status_code=400, content={})
 
+    await tools.delete_sessions(current_user["id"])
     await tools.update_user(current_user["login"], {"passwordHash": hash_password(data.newPassword)})
 
     return JSONResponse(status_code=200, content={"status": "ok"})

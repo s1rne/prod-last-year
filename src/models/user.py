@@ -22,6 +22,7 @@ class User(Base):
     def to_dict(self) -> Dict[str, Any] | None:
         try:
             return {
+                "id": self.id,
                 "login": self.login,
                 "email": self.email,
                 "passwordHash": self.passwordHash,
