@@ -122,9 +122,17 @@ async def remove_friend(inviter_id: int, invitee_login: str):
         return 0
 
 
-async def get_friends(user_id: int):
+async def get_friends(user_id: int, limit: int = 1_000_000, offset: int = 0):
     async with async_session() as session:
-        friends = await session.scalars(select(Friend).where(Friend.inviter_id == user_id))
+        friends = await session.scalars(
+            select(Friend)
+            .where(Friend.inviter_id == user_id)
+            .order_by(Friend.addedAt.desc())
+            .offset(offset)
+            .limit(limit)
+        )
+        if friends is None:
+            return []
         return [await friend.friend_dict() for friend in friends]
 
 

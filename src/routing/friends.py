@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from fastapi.responses import JSONResponse
 
 from db import tools
@@ -6,8 +6,6 @@ from schemas.friends import AddFriendRequest
 from utils.jwt import jwt_tools
 
 router = APIRouter(prefix="/friends", tags=["friends"])
-
-# TODO: add pagination and date
 
 
 @router.post("/add")
@@ -25,6 +23,12 @@ async def remove_friend(data: AddFriendRequest, current_user=Depends(jwt_tools.g
 
 
 @router.get("")
-async def get_friends(current_user=Depends(jwt_tools.get_current_user)):
-    friends = await tools.get_friends(current_user["id"])
+async def get_friends(
+    limit: int = Query(default=10, ge=1, le=1_000_000,
+                       description="Количество записей на странице"),
+    offset: int = Query(
+        default=0, ge=0, description="Смещение от начала списка"),
+    current_user=Depends(jwt_tools.get_current_user)
+):
+    friends = await tools.get_friends(current_user["id"], limit=limit, offset=offset)
     return JSONResponse(status_code=200, content=friends)
