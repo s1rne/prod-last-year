@@ -40,7 +40,7 @@ async def get_my_feed(
         default=0, ge=0, description="Смещение от начала списка"),
     current_user=Depends(jwt_tools.get_current_user)
 ):
-    posts_data = await tools.get_posts_by_user_id(current_user["id"], limit=limit, offset=offset)
+    posts_data = await tools.get_posts_my(current_user["id"], limit=limit, offset=offset)
     posts = [collect_post_data(post) for post in posts_data]
     return JSONResponse(status_code=200, content=posts)
 
@@ -54,8 +54,14 @@ async def get_feed(
         default=0, ge=0, description="Смещение от начала списка"),
     current_user=Depends(jwt_tools.get_current_user)
 ):
-    # TODO: add logic
-    return JSONResponse(status_code=200, content={})
+    status, posts_data = await tools.get_feed_by_login(login, current_user["id"], limit=limit, offset=offset)
+    if status == 2:
+        return JSONResponse(status_code=404, content={"reason": "User not found"})
+    if status == 3:
+        return JSONResponse(status_code=404, content={"reason": "You are not allowed to see this feed"})
+    
+    posts = [collect_post_data(post) for post in posts_data]
+    return JSONResponse(status_code=200, content=posts)
 
 
 @router.get("/{post_id}/like")

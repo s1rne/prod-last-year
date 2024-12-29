@@ -171,14 +171,14 @@ async def new_post(user_id: int, data: NewPostRequest):
         session.add(new_post)
         await session.commit()
         return new_post.to_dict()
-    
+
 
 async def get_post_by_id(post_id: str, seeker_id: str):
     async with async_session() as session:
         post = await session.scalar(select(Post).where(Post.id == post_id))
         if not post:
             return 1, {}
-        
+
         author = await get_user_by_id(post.user_id)
         if not author:
             return 2, {}
@@ -194,9 +194,29 @@ async def get_post_by_id(post_id: str, seeker_id: str):
         return 0, post.to_dict()
 
 
-async def get_posts_by_user_id(user_id: int, limit: int = 1_000_000, offset: int = 0):
+async def get_posts_my(user_id: int, limit: int = 1_000_000, offset: int = 0):
     async with async_session() as session:
         posts = await session.scalars(select(Post).where(Post.user_id == user_id).order_by(Post.createdAt.desc()).offset(offset).limit(limit))
         if posts is None:
             return []
         return [post.to_dict() for post in posts]
+
+
+async def get_feed_by_login(login: str, seeker_id: str, limit: int = 1_000_000, offset: int = 0):
+    async with async_session() as session:
+        author = await session.scalar(select(User).where(User.login == login))
+        if not author:
+            return 2, []
+
+        if author.isPublic == False:
+            if seeker_id == author.id:
+                pass
+            else:
+                is_friend = await session.scalar(select(Friend).where(Friend.inviter_id == author.id and Friend.invitee_id == seeker_id))
+                if not is_friend:
+                    return 3, []
+
+        posts = await session.scalars(select(Post).where(Post.user_id == author.id).order_by(Post.createdAt.desc()).offset(offset).limit(limit))
+        if posts is None:
+            return 0, []
+        return 0, [post.to_dict() for post in posts]
