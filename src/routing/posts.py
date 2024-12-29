@@ -59,7 +59,7 @@ async def get_feed(
         return JSONResponse(status_code=404, content={"reason": "User not found"})
     if status == 3:
         return JSONResponse(status_code=404, content={"reason": "You are not allowed to see this feed"})
-    
+
     posts = [collect_post_data(post) for post in posts_data]
     return JSONResponse(status_code=200, content=posts)
 
@@ -69,8 +69,18 @@ async def like_post(
     post_id: str,
     current_user=Depends(jwt_tools.get_current_user)
 ):
-    # TODO: add logic
-    return JSONResponse(status_code=200, content={})
+    status, post_data = await tools.set_post_reaction(post_id, current_user["id"], 1)
+    if status == 4:
+        return JSONResponse(status_code=400, content={"reason": "Invalid reaction"})
+    if status == 1:
+        return JSONResponse(status_code=404, content={"reason": "Post not found"})
+    if status == 2:
+        return JSONResponse(status_code=404, content={"reason": "User not found"})
+    if status == 3:
+        return JSONResponse(status_code=403, content={"reason": "You are not allowed to see this post"})
+
+    post = collect_post_data(post_data)
+    return JSONResponse(status_code=200, content=post)
 
 
 @router.get("/{post_id}/dislike")
@@ -78,5 +88,15 @@ async def dislike_post(
     post_id: str,
     current_user=Depends(jwt_tools.get_current_user)
 ):
-    # TODO: add logic
-    return JSONResponse(status_code=200, content={})
+    status, post_data = await tools.set_post_reaction(post_id, current_user["id"], -1)
+    if status == 4:
+        return JSONResponse(status_code=400, content={"reason": "Invalid reaction"})
+    if status == 1:
+        return JSONResponse(status_code=404, content={"reason": "Post not found"})
+    if status == 2:
+        return JSONResponse(status_code=404, content={"reason": "User not found"})
+    if status == 3:
+        return JSONResponse(status_code=403, content={"reason": "You are not allowed to see this post"})
+
+    post = collect_post_data(post_data)
+    return JSONResponse(status_code=200, content=post)

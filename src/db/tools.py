@@ -2,7 +2,7 @@ import time
 from models.auth import Session
 from models.country import Country
 from models.friend import Friend
-from models.posts import Post
+from models.posts import Post, PostReaction
 from models.user import User
 from schemas.posts import NewPostRequest
 from utils.utils import hash_password
@@ -170,7 +170,7 @@ async def new_post(user_id: int, data: NewPostRequest):
         new_post = Post(user_id=user_id, content=data.content, tags=data.tags)
         session.add(new_post)
         await session.commit()
-        return new_post.to_dict()
+        return await new_post.to_dict()
 
 
 async def get_post_by_id(post_id: str, seeker_id: str):
@@ -191,7 +191,7 @@ async def get_post_by_id(post_id: str, seeker_id: str):
                 if not is_friend:
                     return 3, {}
 
-        return 0, post.to_dict()
+        return 0, await post.to_dict()
 
 
 async def get_posts_my(user_id: int, limit: int = 1_000_000, offset: int = 0):
@@ -199,7 +199,7 @@ async def get_posts_my(user_id: int, limit: int = 1_000_000, offset: int = 0):
         posts = await session.scalars(select(Post).where(Post.user_id == user_id).order_by(Post.createdAt.desc()).offset(offset).limit(limit))
         if posts is None:
             return []
-        return [post.to_dict() for post in posts]
+        return [await post.to_dict() for post in posts]
 
 
 async def get_feed_by_login(login: str, seeker_id: str, limit: int = 1_000_000, offset: int = 0):
@@ -219,4 +219,49 @@ async def get_feed_by_login(login: str, seeker_id: str, limit: int = 1_000_000, 
         posts = await session.scalars(select(Post).where(Post.user_id == author.id).order_by(Post.createdAt.desc()).offset(offset).limit(limit))
         if posts is None:
             return 0, []
-        return 0, [post.to_dict() for post in posts]
+        return 0, [await post.to_dict() for post in posts]
+
+
+async def set_post_reaction(post_id: str, seeker_id: str, reaction: int):
+    if reaction not in [-1, 1]:
+        return 4, {}
+    
+    async with async_session() as session:
+        _add_likes = 0
+        _add_dislikes = 0
+        
+        post = await session.scalar(select(Post).where(Post.id == post_id))
+        if not post:
+            return 1, {}
+
+        author = await get_user_by_id(post.user_id)
+        if not author:
+            return 2, {}
+
+        if author["isPublic"] == False:
+            if seeker_id == author["id"]:
+                pass
+            else:
+                is_friend = await session.scalar(select(Friend).where(Friend.inviter_id == author["id"] and Friend.invitee_id == seeker_id))
+                if not is_friend:
+                    return 3, {}
+        
+        
+        post_reaction = await session.scalar(select(PostReaction).where(PostReaction.post_id == post_id and PostReaction.user_id == seeker_id))
+        if not post_reaction:
+            await session.add(PostReaction(post_id=post_id, user_id=seeker_id, reaction=reaction))
+            _add_likes = 1 if reaction == 1 else 0
+            _add_dislikes = 1 if reaction == -1 else 0
+        else:
+            if post_reaction.reaction != reaction:
+                await session.execute(update(PostReaction).where(PostReaction.id == post_reaction.id).values(reaction=reaction))
+                _add_likes = 1 if reaction == 1 else 0
+                _add_likes = -1 if reaction == -1 else 0
+                _add_dislikes = -1 if reaction == 1 else 0
+                _add_dislikes = 1 if reaction == -1 else 0
+        await session.commit()
+        
+        result = await post.to_dict()
+        result["likesCount"] = result["likesCount"] + _add_likes
+        result["dislikesCount"] = result["dislikesCount"] + _add_dislikes
+        return 0, result

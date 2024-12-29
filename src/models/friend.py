@@ -1,4 +1,3 @@
-import datetime
 from typing import Any, Dict
 
 from sqlalchemy import DateTime, String, func, select

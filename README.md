@@ -18,7 +18,7 @@ docker-compose up -d
 - [x] `08/friends` -> Друзья!
 - [x] `09/posts/publish` -> Публикация поста и получение по ID.
 - [x] `10/posts/feed` -> Получение новостной ленты.
-- [ ] `11/posts/likes` -> Лайки и дизлайки.
+- [x] `11/posts/likes` -> Лайки и дизлайки.
 
 ##
 #### Полное описание кейса можно найти [тут](https://github.com/Central-University-IT/test-python/blob/main/README.md)
